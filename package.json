@@ -1,0 +1,40 @@
+{
+  "name": "map-generator",
+  "version": "1.0.0",
+  "description": "``` git clone https://github.com/dhdanie/map-generator.git cd map-generator npm run compile node dist/app.js [--outfile=<output file name (e.g. model.zip)>] ```",
+  "main": "dist/app.js",
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "compile": "tsc",
+    "start": "tsc && node dist/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "@types/yargs": "^17.0.20",
+    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "@typescript-eslint/parser": "^5.49.0",
+    "eslint": "^8.32.0",
+    "prettier": "2.8.3"
+  },
+  "dependencies": {
+    "@types/d3-quadtree": "^1.0.7",
+    "@types/file-saver": "^2.0.1",
+    "@types/jsts": "^0.17.2",
+    "d3-quadtree": "^1.0.7",
+    "file-saver": "^2.0.2",
+    "isect": "^3.0.0",
+    "jsts": "^2.1.2",
+    "jszip": "^3.4.0",
+    "polyk": "^0.24.0",
+    "simplex-noise": "^2.4.0",
+    "simplify-js": "^1.2.4",
+    "three": "^0.115.0",
+    "three-csg-ts": "^1.0.4",
+    "threejs-export-stl": "0.0.4",
+    "yargs": "^17.6.2"
+  }
+}
