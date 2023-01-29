@@ -121,6 +121,7 @@ export class Buildings {
   }
 
   get models(): BuildingModel[] {
+    this._models.setBuildingProjections();
     return this._models.buildingModels;
   }
 
