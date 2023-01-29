@@ -3,6 +3,7 @@
 ```
 git clone https://github.com/dhdanie/map-generator.git
 cd map-generator
+npm install
 npm run compile
 node dist/app.js [--outfile=<output file name (e.g. model.zip)>]
 ```

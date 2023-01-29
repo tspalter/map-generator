@@ -4,3 +4,4 @@ dist
 **/*.zip
 **/*.js
 **/*.js.map
+package-lock.json
