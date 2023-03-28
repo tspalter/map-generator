@@ -43,8 +43,8 @@ export class DomainController {
 
   private setScreenDimensions(): void {
     this.moved = true;
-    this._screenDimensions.setX(1280);
-    this._screenDimensions.setY(1024);
+    this._screenDimensions.setX(1536);
+    this._screenDimensions.setY(746);
   }
 
   public static getInstance(): DomainController {

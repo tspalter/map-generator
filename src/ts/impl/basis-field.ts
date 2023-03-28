@@ -59,7 +59,7 @@ export class Grid extends BasisField {
     super(centre, size, decay);
   }
 
-  set theta(theta: number) {
+  public set theta(theta: number) {
     this._theta = theta;
   }
 

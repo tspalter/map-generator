@@ -193,6 +193,16 @@ export default class PolygonUtil {
     return inside;
   }
 
+  // checks insidePolygon for an array of polygons, returns true if it enters one of them
+  public static insidePolygons(point: Vector, polygons: Vector[][]): boolean {
+    for (const polygon of polygons) {
+      if (this.insidePolygon(point, polygon)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static pointInRectangle(point: Vector, origin: Vector, dimensions: Vector): boolean {
     return point.x >= origin.x && point.y >= origin.y && point.x <= dimensions.x && point.y <= dimensions.y;
   }

@@ -13,7 +13,7 @@ export interface NoiseParams {
 }
 
 export class TensorField {
-  private basisFields: BasisField[] = [];
+  public basisFields: BasisField[] = [];
   private noise: SimplexNoise;
 
   public parks: Vector[][] = [];

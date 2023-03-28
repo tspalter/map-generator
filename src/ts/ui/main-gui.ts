@@ -51,38 +51,125 @@ export class MainGUI {
 
   private redraw = true;
 
-  constructor(private tensorField: TensorField, private closeTensorFolder: () => void) {
-    this.coastlineParams = Object.assign(
+  constructor(private tensorField: TensorField, 
+    minordsep: number,
+    minordtest: number,
+    minordstep: number,
+    minordlookahead: number,
+    minordcirclejoin: number,
+    minorjoinangle: number,
+    minorpathIterations: number,
+    minorseedTries: number,
+    minorsimplifyTolerance: number,
+    minorcollideEarly: number,
+    majordsep: number,
+    majordtest: number,
+    majordstep: number,
+    majordlookahead: number,
+    majordcirclejoin: number,
+    majorjoinangle: number,
+    majorpathIterations: number,
+    majorseedTries: number,
+    majorsimplifyTolerance: number,
+    majorcollideEarly: number,
+    maindsep: number,
+    maindtest: number,
+    maindstep: number,
+    maindlookahead: number,
+    maindcirclejoin: number,
+    mainjoinangle: number,
+    mainpathIterations: number,
+    mainseedTries: number,
+    mainsimplifyTolerance: number,
+    maincollideEarly: number,
+    coastdsep: number,
+    coastdtest: number,
+    coastdstep: number,
+    coastdlookahead: number,
+    coastdcirclejoin: number,
+    coastjoinangle: number,
+    coastpathIterations: number,
+    coastseedTries: number,
+    coastsimplifyTolerance: number,
+    coastcollideEarly: number,
+    coastnoiseEnabled: boolean,
+    coastnoiseSize: number,
+    coastnoiseAngle: number,
+    rivernoiseEnabled: boolean,
+    rivernoiseSize: number,
+    rivernoiseAngle: number,
+    clusterBigParks: boolean,
+    numBigParks: number,
+    numSmallParks: number,
+    buildingminArea: number,
+    buildingshrinkSpacing: number,
+    buildingchanceNoDivide: number,
+    private closeTensorFolder: () => void) {
+      this.numBigParks = numBigParks;
+      this.numSmallParks = numSmallParks;
+      this.clusterBigParks = clusterBigParks;
+
+      this.minorParams.dsep = minordsep;
+      this.minorParams.dtest = minordtest;
+      this.minorParams.dstep = minordstep;
+      this.minorParams.dlookahead = minordlookahead;
+      this.minorParams.dcirclejoin = minordcirclejoin;
+      this.minorParams.joinangle = minorjoinangle;
+      this.minorParams.pathIterations = minorpathIterations;
+      this.minorParams.seedTries = minorseedTries;
+      this.minorParams.simplifyTolerance = minorsimplifyTolerance;
+      this.minorParams.collideEarly = minorcollideEarly;
+      this.coastlineParams = Object.assign(
       {
         coastNoise: {
-          noiseEnabled: true,
-          noiseSize: 30,
-          noiseAngle: 20,
+          noiseEnabled: coastnoiseEnabled,
+          noiseSize: coastnoiseSize,
+          noiseAngle: coastnoiseAngle,
         },
         riverNoise: {
-          noiseEnabled: true,
-          noiseSize: 30,
-          noiseAngle: 20,
+          noiseEnabled: rivernoiseEnabled,
+          noiseSize: rivernoiseSize,
+          noiseAngle: rivernoiseAngle,
         },
         riverBankSize: 10,
         riverSize: 30,
       },
       this.minorParams,
     );
-    this.coastlineParams.pathIterations = 10000;
-    this.coastlineParams.simplifyTolerance = 10;
+    this.coastlineParams.dsep = coastdsep;
+    this.coastlineParams.dtest = coastdtest;
+    this.coastlineParams.dstep = coastdstep;
+    this.coastlineParams.dlookahead = coastdlookahead;
+    this.coastlineParams.dcirclejoin = coastdcirclejoin;
+    this.coastlineParams.joinangle = coastjoinangle;
+    this.coastlineParams.pathIterations = coastpathIterations;
+    this.coastlineParams.seedTries = coastseedTries;
+    this.coastlineParams.simplifyTolerance = coastsimplifyTolerance;
+    this.coastlineParams.collideEarly = coastcollideEarly;
 
     this.majorParams = Object.assign({}, this.minorParams);
-    this.majorParams.dsep = 100;
-    this.majorParams.dtest = 30;
-    this.majorParams.dlookahead = 200;
-    this.majorParams.collideEarly = 0;
+    this.majorParams.dsep = majordsep;
+    this.majorParams.dtest = majordtest;
+    this.majorParams.dstep = majordstep;
+    this.majorParams.dlookahead = majordlookahead;
+    this.majorParams.dcirclejoin = majordcirclejoin;
+    this.majorParams.joinangle = majorjoinangle;
+    this.majorParams.pathIterations = majorpathIterations;
+    this.majorParams.seedTries = majorseedTries;
+    this.majorParams.simplifyTolerance = majorsimplifyTolerance;
+    this.majorParams.collideEarly = majorcollideEarly;
 
     this.mainParams = Object.assign({}, this.minorParams);
-    this.mainParams.dsep = 400;
-    this.mainParams.dtest = 200;
-    this.mainParams.dlookahead = 500;
-    this.mainParams.collideEarly = 0;
+    this.mainParams.dsep = maindsep;
+    this.mainParams.dtest = maindtest;
+    this.mainParams.dstep = maindstep;
+    this.mainParams.dlookahead = maindlookahead;
+    this.mainParams.dcirclejoin = maindcirclejoin;
+    this.mainParams.joinangle = mainjoinangle;
+    this.mainParams.pathIterations = mainpathIterations;
+    this.mainParams.seedTries = mainseedTries;
+    this.mainParams.simplifyTolerance = mainsimplifyTolerance;
+    this.mainParams.collideEarly = maincollideEarly;
 
     const integrator = new RK4Integrator(tensorField, this.minorParams);
     const redraw = () => (this.redraw = true);
@@ -114,6 +201,9 @@ export class MainGUI {
     ).initFolder();
 
     this.buildings = new Buildings(tensorField, redraw, this.minorParams.dstep, this.animate);
+    this.buildings.buildingParams.minArea = buildingminArea;
+    this.buildings.buildingParams.shrinkSpacing = buildingshrinkSpacing;
+    this.buildings.buildingParams.chanceNoDivide = buildingchanceNoDivide;
     this.buildings.setPreGenerateCallback(() => {
       const allStreamlines = [];
       allStreamlines.push(...this.mainRoads.allStreamlines);
@@ -296,8 +386,8 @@ export class MainGUI {
 
   // OBJ Export methods
 
-  public get seaPolygon(): Vector[] {
-    return this.coastline.seaPolygon;
+  public get seaPolygons(): Vector[][] {
+    return this.coastline.seaPolygons;
   }
 
   public get riverPolygon(): Vector[] {

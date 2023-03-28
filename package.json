@@ -35,6 +35,7 @@
     "three": "^0.115.0",
     "three-csg-ts": "^1.0.4",
     "threejs-export-stl": "0.0.4",
+    "utm-latlng": "^1.0.7",
     "yargs": "^17.6.2"
   }
 }

@@ -87,7 +87,7 @@ export class Buildings {
   private _models: BuildingModels = new BuildingModels([]);
   private _blocks: Vector[][] = [];
 
-  private buildingParams: PolygonParams = {
+  public buildingParams: PolygonParams = {
     maxLength: 20,
     minArea: 50,
     shrinkSpacing: 4,
@@ -121,6 +121,7 @@ export class Buildings {
   }
 
   get models(): BuildingModel[] {
+    this._models.setBuildingProjections();
     return this._models.buildingModels;
   }
 

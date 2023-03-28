@@ -7,6 +7,7 @@ import { NoiseParams } from './ts/impl/tensor-field';
 import { Util } from './ts/impl/util';
 import { Vector } from './ts/impl/vector';
 import { saveAs } from 'file-saver';
+import { BasisField, Grid, Radial } from './ts/impl/basis-field';
 
 export class Main {
   private readonly STARTING_WIDTH = 1440; // Initially zooms in if width > STARTING_WIDTH
@@ -36,7 +37,89 @@ export class Main {
 
   private firstGenerate = true; // Don't randomise tensor field on first generate
 
-  constructor() {
+  // grids/radial
+  private g0: Grid;
+  private g1: Grid;
+  private g2: Grid;
+  private g3: Grid;
+  private r: Radial;
+
+  constructor(minordsep: number, 
+    minordtest: number, 
+    minordstep: number,
+    minordlookahead: number,
+    minordcirclejoin: number,
+    minorjoinangle: number,
+    minorpathIterations: number,
+    minorseedTries: number,
+    minorsimplifyTolerance: number,
+    minorcollideEarly: number,
+    majordsep: number,
+    majordtest: number,
+    majordstep: number,
+    majordlookahead: number,
+    majordcirclejoin: number,
+    majorjoinangle: number,
+    majorpathIterations: number,
+    majorseedTries: number,
+    majorsimplifyTolerance: number,
+    majorcollideEarly: number,
+    maindsep: number,
+    maindtest: number,
+    maindstep: number,
+    maindlookahead: number,
+    maindcirclejoin: number,
+    mainjoinangle: number,
+    mainpathIterations: number,
+    mainseedTries: number,
+    mainsimplifyTolerance: number,
+    maincollideEarly: number,
+    coastdsep: number,
+    coastdtest: number,
+    coastdstep: number,
+    coastdlookahead: number,
+    coastdcirclejoin: number,
+    coastjoinangle: number,
+    coastpathIterations: number,
+    coastseedTries: number,
+    coastsimplifyTolerance: number,
+    coastcollideEarly: number,
+    coastnoiseEnabled: boolean,
+    coastnoiseSize: number,
+    coastnoiseAngle: number,
+    rivernoiseEnabled: boolean,
+    rivernoiseSize: number,
+    rivernoiseAngle: number,
+    clusterBigParks: boolean,
+    numBigParks: number,
+    numSmallParks: number,
+    buildingminArea: number,
+    buildingshrinkSpacing: number,
+    buildingchanceNoDivide: number,
+    grid0X: number,
+    grid0Y: number,
+    grid0size: number,
+    grid0decay: number,
+    grid0theta: number,
+    grid1X: number,
+    grid1Y: number,
+    grid1size: number,
+    grid1decay: number,
+    grid1theta: number,
+    grid2X: number,
+    grid2Y: number,
+    grid2size: number,
+    grid2decay: number,
+    grid2theta: number,
+    grid3X: number,
+    grid3Y: number,
+    grid3size: number,
+    grid3decay: number,
+    grid3theta: number,
+    radialX: number,
+    radialY: number,
+    radialsize: number,
+    radialdecay: number) {
     // Make sure we're not too zoomed out for large resolutions
     const screenWidth = this.domainController.screenDimensions.x;
     if (screenWidth > this.STARTING_WIDTH) {
@@ -54,14 +137,85 @@ export class Main {
 
     this.tensorField = new TensorFieldGUI(this.dragController, true, noiseParamsPlaceholder);
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    this.mainGui = new MainGUI(this.tensorField, () => {});
+    this.mainGui = new MainGUI(this.tensorField, 
+      minordsep, 
+      minordtest,
+      minordstep,
+      minordlookahead,
+      minordcirclejoin,
+      minorjoinangle,
+      minorpathIterations,
+      minorseedTries,
+      minorsimplifyTolerance,
+      minorcollideEarly,
+      majordsep,
+      majordtest,
+      majordstep,
+      majordlookahead,
+      majordcirclejoin,
+      majorjoinangle,
+      majorpathIterations,
+      majorseedTries,
+      majorsimplifyTolerance,
+      majorcollideEarly,
+      maindsep,
+      maindtest,
+      maindstep,
+      maindlookahead,
+      maindcirclejoin,
+      mainjoinangle,
+      mainpathIterations,
+      mainseedTries,
+      mainsimplifyTolerance,
+      maincollideEarly,
+      coastdsep,
+      coastdtest,
+      coastdstep,
+      coastdlookahead,
+      coastdcirclejoin,
+      coastjoinangle,
+      coastpathIterations,
+      coastseedTries,
+      coastsimplifyTolerance,
+      coastcollideEarly,
+      coastnoiseEnabled,
+      coastnoiseSize,
+      coastnoiseAngle,
+      rivernoiseEnabled,
+      rivernoiseSize,
+      rivernoiseAngle,
+      clusterBigParks,
+      numBigParks,
+      numSmallParks,
+      buildingminArea,
+      buildingshrinkSpacing,
+      buildingchanceNoDivide,
+      () => {});
 
     this.tensorField.setRecommended();
+    this.g0 = new Grid(new Vector(grid0X, grid0Y), grid0size, grid0decay, grid0theta);
+    this.g1 = new Grid(new Vector(grid1X, grid1Y), grid1size, grid1decay, grid1theta);
+    this.g2 = new Grid(new Vector(grid2X, grid2Y), grid2size, grid2decay, grid2theta);
+    this.g3 = new Grid(new Vector(grid3X, grid3Y), grid3size, grid3decay, grid3theta);
+    this.r = new Radial(new Vector(radialX, radialY), radialsize, radialdecay);
+
+    this.tensorField.basisFields[0] = this.g0;
+    this.tensorField.basisFields[1] = this.g1;
+    this.tensorField.basisFields[2] = this.g2;
+    this.tensorField.basisFields[3] = this.g3;
+    this.tensorField.basisFields[4] = this.r;
+
   }
 
   doItAll(fileName: string): Promise<void> {
     return new Promise<void>((resolve) => {
-      this.generate();
+      try {
+        this.generate();
+      }
+      catch(err) {
+        console.log(err);
+        resolve();
+      }
       this.downloadSTL(fileName).then(() => resolve());
     });
   }
@@ -130,7 +284,7 @@ export class Main {
       const blocks = this.mainGui.getBlocks();
       const modelGenerator = new ModelGenerator(
         ground,
-        this.mainGui.seaPolygon,
+        this.mainGui.seaPolygons[0],
         this.mainGui.coastlinePolygon,
         this.mainGui.riverPolygon,
         this.mainGui.mainRoadPolygons,

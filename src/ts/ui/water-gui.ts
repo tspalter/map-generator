@@ -7,6 +7,7 @@ import { TensorField } from '../impl/tensor-field';
 import { FieldIntegrator } from '../impl/integrator';
 import { Util } from '../impl/util';
 import { Vector } from '../impl/vector';
+import { readFileSync } from 'fs';
 
 export class WaterGUI extends RoadGUI {
   protected streamlines: WaterGenerator;
@@ -46,7 +47,23 @@ export class WaterGUI extends RoadGUI {
     );
     this.domainController.zoom = this.domainController.zoom * Util.DRAW_INFLATE_AMOUNT;
 
-    this.streamlines.createCoast();
+    const fileContent = readFileSync('C:/Users/tcs11/Documents/OSM-locations/Washington/seattle.geojson', 'utf8');
+    const data = JSON.parse(fileContent);
+    let originPoint = Vector.zeroVector();
+    for (const feature of data.features) {
+      if (feature.properties.name == "originPoint") {
+        originPoint.x = feature.geometry.coordinates[1];
+        originPoint.y = feature.geometry.coordinates[0];
+        break;
+      }
+    }
+    
+    for (const feature of data.features) {
+      if (feature.properties.natural == "water") {
+        this.streamlines.createCoastFromData(feature, originPoint);
+      }
+    }
+    // this.streamlines.createCoast();
     this.streamlines.createRiver();
 
     this.closeTensorFolder();
@@ -77,7 +94,7 @@ export class WaterGUI extends RoadGUI {
     return this.streamlines.coastline.map((v) => this.domainController.worldToScreen(v.clone()));
   }
 
-  get seaPolygon(): Vector[] {
-    return this.streamlines.seaPolygon.map((v) => this.domainController.worldToScreen(v.clone()));
+  get seaPolygons(): Vector[][] {
+    return this.streamlines.seaPolygons.map((v) => v.map((w) => this.domainController.worldToScreen(w.clone())));
   }
 }
