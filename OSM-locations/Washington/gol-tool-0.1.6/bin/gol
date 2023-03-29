@@ -1,0 +1,3 @@
+#!/bin/bash
+scriptDir=$(dirname -- "$(readlink -f -- "$BASH_SOURCE")")
+java -cp $scriptDir/../lib/gol.jar com.geodesk.gol.GolTool "$@"
