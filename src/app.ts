@@ -244,7 +244,7 @@ const main = new Main(argv.minordsep,
   argv.radialsize,
   argv.radialdecay
   );
-  const fileContent = readFileSync('C:/Users/tcs11/Documents/OSM-locations/Washington/seattle.geojson', 'utf8');
+  const fileContent = readFileSync('C:/Users/tcs11/Documents/map-generator/OSM-locations/Washington/seattle.geojson', 'utf8');
   const data = JSON.parse(fileContent);
   // console.log(data.type);
   // for(const feature of data.features) {
