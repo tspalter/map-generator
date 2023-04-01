@@ -64,7 +64,12 @@ export class WaterGUI extends RoadGUI {
       }
     }
     // this.streamlines.createCoast();
-    this.streamlines.createRiver();
+    for (const feature of data.features) {
+      if (feature.properties.waterway != null) {
+        this.streamlines.createRiverFromData(feature, originPoint);
+      }
+    }
+    // this.streamlines.createRiver();
 
     this.closeTensorFolder();
     this.redraw();
@@ -80,8 +85,8 @@ export class WaterGUI extends RoadGUI {
     return withSecondary;
   }
 
-  get river(): Vector[] {
-    return this.streamlines.riverPolygon.map((v) => this.domainController.worldToScreen(v.clone()));
+  get rivers(): Vector[][] {
+    return this.streamlines.riverPolygons.map((v) => v.map((w) => this.domainController.worldToScreen(w.clone())));
   }
 
   get secondaryRiver(): Vector[] {

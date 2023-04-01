@@ -284,6 +284,28 @@ export class StreamlineGenerator {
     return true;
   }
 
+  public createStreamlineFromData(major: boolean, feature: any, originPoint: Vector) : void {
+    let streamline: Vector[] = [];
+    let seed;
+    originPoint = this.latlongToMercator(originPoint.x, originPoint.y);
+    const data = feature.geometry.coordinates;
+    for (let i = 0; i < data.length; i++) {
+      const lat = data[i][1];
+      const long = data[i][0];
+      seed = this.latlongToMercator(lat, long);
+      if (!seed) {
+        throw new Error('Seed is undefined');
+      }
+      seed.x -= originPoint.x;
+      seed.y -= originPoint.y;
+      streamline.push(seed);
+    }
+
+    this.grid(major).addPolyline(streamline);
+    this.streamlines(major).push(streamline);
+    this.allStreamlines.push(streamline);
+  }
+
   protected validStreamline(s: Vector[]): boolean {
     return s.length > 5;
   }
@@ -512,5 +534,93 @@ export class StreamlineGenerator {
 
     backwardParams.streamline.reverse().push(...forwardParams.streamline);
     return backwardParams.streamline;
+  }
+
+  public latlongToUTM(lat: number, long: number): Vector {
+    // find the central meridian
+    let centralMeridian = this.findCentralMeridian(long);
+    // convert lat and long to radians
+    lat = lat * Math.PI / 180;
+    long = long * Math.PI / 180;
+    centralMeridian = centralMeridian * Math.PI / 180;
+
+    // cross sections of the Earth
+    const a = 6378000;
+    const b = 6357000;
+
+    // other constants
+    const k0 = 0.9996;
+    const e = Math.sqrt(1 - (Math.pow(b, 2) / Math.pow(a, 2))); // Earth's eccentricity
+    const ePrimeSquared = Math.pow((e * a / b), 2);
+    const n = (a - b) / (a + b);
+    const nu = a / Math.pow(1 - (Math.pow(e, 2) * Math.pow(Math.sin(lat), 2)), 0.5);
+    const p = long - centralMeridian;
+
+    // calculate the meridonial arc, approximated to the 10th order
+    const c1 = 1 + ((3/4)*Math.pow(e, 2)) + ((45/64)*Math.pow(e, 4))+ ((175/256)*Math.pow(e, 6))+ ((11025/16384)*Math.pow(e, 8))+ ((43659/65536)*Math.pow(e, 10));
+    const c2 = ((3/4)*Math.pow(e, 2)) + ((15/16)*Math.pow(e, 4)) + ((525/512)*Math.pow(e, 6)) + ((2205/2048)*Math.pow(e, 8)) + ((72765/65536)*Math.pow(e, 10));
+    const c3 = ((15/64)*Math.pow(e, 4)) + ((105/256)*Math.pow(e, 6)) + ((2205/4096)*Math.pow(e, 8)) + ((10395/16384)*Math.pow(e, 10));
+    const c4 = ((35/512)*Math.pow(e, 6)) + ((315/2048)*Math.pow(e, 8)) + ((31185/131072)*Math.pow(e, 10));
+    const c5 = ((315/16384)*Math.pow(e, 8)) + ((3465/65536)*Math.pow(e, 10));
+    const c6 = ((693/131072)*Math.pow(e, 10));
+
+    const meridonialArc = a * (1 - Math.pow(e, 2)) * ((c1 * lat) - (c2 * (Math.sin(2*lat) / 2)) + (c3 * (Math.sin(4*lat) / 4)) - (c4 * (Math.sin(6*lat) / 6)) + (c5 * (Math.sin(8*lat) / 8)) - (c6 * (Math.sin(10*lat) / 10)));
+
+    // now calculate northing and easting
+    const k1 = meridonialArc * k0;
+    const k2 = k0 * nu * Math.sin(lat) * Math.cos(lat) / 2;
+    const k3 = (k0 * nu * Math.sin(lat) * Math.pow(Math.cos(lat), 3) / 24) * (5 - Math.pow(Math.tan(lat), 2) + 9 * ePrimeSquared * Math.pow(Math.cos(lat), 2) + 4 * Math.pow(ePrimeSquared, 2) * Math.pow(Math.cos(lat), 4));
+    const northing = k1 + k2 * Math.pow(p, 2) + k3 * Math.pow(p, 4);
+
+    const k4 = k0 * nu * Math.cos(lat);
+    const k5 = (k0 * nu * Math.pow(Math.cos(lat), 3) / 6) * (1 - Math.pow(Math.tan(lat), 2) + ePrimeSquared * Math.pow(Math.cos(lat), 2));
+    const easting = k4 * p + k5 * Math.pow(p, 3);
+    const vec = new Vector(northing, easting);
+    return vec;
+  }
+
+  private findCentralMeridian(long: number): number {
+    let lowEnd = -180;
+    for (let highEnd = -174; highEnd <= 180; highEnd += 6) {
+      if (long < highEnd && long > lowEnd) {
+        return highEnd - 3;
+      }
+      lowEnd = highEnd;
+    }
+    return 0;
+  }
+
+  public DegToRad(ang: number) : number {
+    return ang * (Math.PI / 180);
+  }
+
+  public mercatorX(long: number) : number {
+    const rMajor = 6378137;
+    return rMajor * this.DegToRad(long);
+  }
+
+  public mercatorY(lat: number) : number {
+    if (lat > 89.5) {
+      lat = 89.5;
+    }
+    if (lat < -89.5) {
+      lat = 89.5;
+    }
+    const rMajor = 6378137;
+    const rMinor = 6356752.3142;
+    const temp = rMinor / rMajor;
+    const es = 1 - (temp * temp);
+    const eccentricity = Math.sqrt(es);
+    const phi = this.DegToRad(lat);
+    const sinPhi = Math.sin(phi);
+    let con = eccentricity * sinPhi;
+    const com = 0.5 * eccentricity;
+    con = Math.pow((1 - con) / (1 + con), com);
+    const ts = Math.tan(Math.PI *0.25 - phi * 0.5) / con;
+    return 0 - (rMajor * Math.log(ts));
+  }
+
+  public latlongToMercator(lat: number, long: number) : Vector {
+    return new Vector(Math.floor(this.mercatorX(long)), Math.floor(this.mercatorY(lat)));
   }
 }

@@ -17,7 +17,7 @@ export class TensorField {
   private noise: SimplexNoise;
 
   public parks: Vector[][] = [];
-  public sea: Vector[] = [];
+  public seas: Vector[][] = [];
   public river: Vector[] = [];
   public ignoreRiver = false;
 
@@ -64,7 +64,7 @@ export class TensorField {
   reset(): void {
     this.basisFields = [];
     this.parks = [];
-    this.sea = [];
+    this.seas = [];
     this.river = [];
   }
 
@@ -113,12 +113,15 @@ export class TensorField {
   }
 
   onLand(point: Vector): boolean {
-    const inSea = PolygonUtil.insidePolygon(point, this.sea);
-    if (this.ignoreRiver) {
-      return !inSea;
+    let onLand = false;
+    for (let i = 0; i < this.seas.length; i++) {
+      const inSea = PolygonUtil.insidePolygon(point, this.seas[i]);
+      if (this.ignoreRiver) {
+        return !inSea;
+      }
+      onLand = !onLand && !inSea && !PolygonUtil.insidePolygon(point, this.river);
     }
-
-    return !inSea && !PolygonUtil.insidePolygon(point, this.river);
+    return onLand;
   }
 
   inParks(point: Vector): boolean {

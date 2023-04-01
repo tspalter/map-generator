@@ -3,6 +3,7 @@ import { StreamlineGenerator, StreamlineParams } from '../impl/streamlines';
 import { Vector } from '../impl/vector';
 import { DomainController } from './domain-controller';
 import { Util } from '../impl/util';
+import { readFileSync } from 'fs';
 
 /**
  * Handles creation of roads
@@ -87,9 +88,37 @@ export class RoadGUI {
       Object.assign({}, this.params),
     );
     this.domainController.zoom = this.domainController.zoom * Util.DRAW_INFLATE_AMOUNT;
-
+    
     for (const s of this.existingStreamlines) {
       this.streamlines.addExistingStreamlines(s.streamlines);
+    }
+
+    // only do this during main roads phase
+    if (this.existingStreamlines.length < 2) {
+      const fileContent = readFileSync('C:/Users/tcs11/Documents/map-generator/OSM-locations/Washington/seattle.geojson', 'utf8');
+      const data = JSON.parse(fileContent);
+      let originPoint = Vector.zeroVector();
+      for (const feature of data.features) {
+        if (feature.properties.name == 'originPoint') {
+          originPoint.x = feature.geometry.coordinates[1];
+          originPoint.y = feature.geometry.coordinates[0];
+          break;
+        }
+      }
+      let dataStreamlines = new StreamlineGenerator(
+        this.integrator,
+        this.domainController.origin,
+        this.domainController.worldDimensions,
+        Object.assign({}, this.params),
+      );
+      let major = true;
+      for (const feature of data.features) {
+        if (feature.properties.highway == 'residential') {
+          dataStreamlines.createStreamlineFromData(major, feature, originPoint);
+          major = !major;
+        }
+      }
+      this.streamlines.addExistingStreamlines(dataStreamlines);
     }
 
     this.closeTensorFolder();

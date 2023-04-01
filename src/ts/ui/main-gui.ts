@@ -225,7 +225,7 @@ export class MainGUI {
       this.smallParks = [];
       this.buildings.reset();
       tensorField.parks = [];
-      tensorField.sea = [];
+      tensorField.seas = [];
       tensorField.river = [];
     });
 
@@ -390,8 +390,8 @@ export class MainGUI {
     return this.coastline.seaPolygons;
   }
 
-  public get riverPolygon(): Vector[] {
-    return this.coastline.river;
+  public get riverPolygons(): Vector[][] {
+    return this.coastline.rivers;
   }
 
   public get buildingModels(): BuildingModel[] {

@@ -284,9 +284,9 @@ export class Main {
       const blocks = this.mainGui.getBlocks();
       const modelGenerator = new ModelGenerator(
         ground,
-        this.mainGui.seaPolygons[0],
+        this.mainGui.seaPolygons,
         this.mainGui.coastlinePolygon,
-        this.mainGui.riverPolygon,
+        this.mainGui.riverPolygons,
         this.mainGui.mainRoadPolygons,
         this.mainGui.majorRoadPolygons,
         this.mainGui.minorRoadPolygons,

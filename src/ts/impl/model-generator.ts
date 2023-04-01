@@ -33,12 +33,16 @@ export class ModelGenerator {
   private roadsBsp: CSG | null = null;
   private buildingsGeometry = new THREE.Geometry();
   private buildingsToProcess: BuildingModel[] = [];
+  private seasGeometry = new THREE.Geometry();
+  private seasToProcess: Vector[][] = [];
+  private riversGeometry = new THREE.Geometry();
+  private riversToProcess: Vector[][] = [];
 
   constructor(
     private ground: Vector[],
-    private sea: Vector[],
+    private seas: Vector[][],
     private coastline: Vector[],
-    private river: Vector[],
+    private rivers: Vector[][],
     private mainRoads: Vector[][],
     private majorRoads: Vector[][],
     private minorRoads: Vector[][],
@@ -59,10 +63,14 @@ export class ModelGenerator {
       }
       this.groundBsp = CSG.fromMesh(this.groundMesh);
       this.setState(ModelGeneratorStates.SUBTRACT_OCEAN);
-
-      this.subtractOcean();
+      this.seasToProcess = [...this.seas];
+      while (this.subtractOcean()) {
+        console.log(`Adding water`);
+      }
       this.addCoastline();
-      this.subtractRiver();
+      while (this.subtractRiver()) {
+        console.log('Adding river');
+      }
       while (this.addRoads()) {
         console.log('Adding roads');
       }
@@ -80,8 +88,20 @@ export class ModelGenerator {
     this.state = s;
   }
 
-  private subtractOcean(): void {
-    const seaLevelMesh = this.polygonToMesh(this.ground, 0);
+  private subtractOcean(): boolean {
+    if (this.seasToProcess.length === 0) {
+      const mesh = new THREE.Mesh(this.seasGeometry);
+      this.threeToBlender(mesh);
+      const seasSTL = this.exportSTL.fromMesh(mesh);
+      this.zip.file('model/seas.stl', seasSTL);
+      this.setState(ModelGeneratorStates.ADD_COASTLINE);
+      return false; 
+    }
+    const sea = this.seasToProcess.pop();
+    if (!sea) {
+      return false;
+    }
+    const seaLevelMesh = this.polygonToMesh(this.ground, 1);
     if (!seaLevelMesh) {
       throw new Error('seaLevelMesh is null');
     }
@@ -89,18 +109,24 @@ export class ModelGenerator {
     const seaLevelSTL = this.exportSTL.fromMesh(seaLevelMesh);
     this.zip.file('model/domain.stl', seaLevelSTL);
 
-    const seaMesh = this.polygonToMesh(this.sea, 0);
+    const seaMesh = this.polygonToMesh(sea, 1);
     if (!seaMesh) {
-      throw new Error('seaMesh is null');
+      console.log('Warning - sea mesh was null');
+      return true;
     }
-    this.threeToBlender(seaMesh);
-    const seaMeshSTL = this.exportSTL.fromMesh(seaMesh);
-    this.zip.file('model/sea.stl', seaMeshSTL);
-    this.setState(ModelGeneratorStates.ADD_COASTLINE);
+    // this.threeToBlender(seaMesh);
+    // const seaMeshSTL = this.exportSTL.fromMesh(seaMesh);
+    // this.zip.file('model/sea.stl', seaMeshSTL);
+    // this.setState(ModelGeneratorStates.ADD_COASTLINE);
+    if (!this.groundMesh) {
+      throw new Error('this.groundMesh is null');
+    }
+    this.seasGeometry.merge(seaMesh.geometry as THREE.Geometry, this.groundMesh.matrix);
+    return true;
   }
 
   private addCoastline(): void {
-    const coastlineMesh = this.polygonToMesh(this.coastline, 0);
+    const coastlineMesh = this.polygonToMesh(this.coastline, 2);
     if (!coastlineMesh) {
       throw new Error('coastlineMesh is null');
     }
@@ -108,18 +134,35 @@ export class ModelGenerator {
     const coastlineSTL = this.exportSTL.fromMesh(coastlineMesh);
     this.zip.file('model/coastline.stl', coastlineSTL);
     this.setState(ModelGeneratorStates.SUBTRACT_RIVER);
+    this.riversToProcess = [...this.rivers];
   }
 
-  private subtractRiver(): void {
-    const riverMesh = this.polygonToMesh(this.river, 0);
-    if (!riverMesh) {
-      throw new Error('riverMesh is null');
+  private subtractRiver(): boolean {
+    if (this.riversToProcess.length === 0) {
+      const mesh = new THREE.Mesh(this.riversGeometry);
+      this.threeToBlender(mesh);
+      const riversSTL = this.exportSTL.fromMesh(mesh);
+      this.zip.file('model/rivers.stl', riversSTL);
+      this.setState(ModelGeneratorStates.ADD_ROADS);
+      this.polygonsToProcess = this.minorRoads.concat(this.majorRoads).concat(this.mainRoads);
+      return false; 
     }
-    this.threeToBlender(riverMesh);
-    const riverSTL = this.exportSTL.fromMesh(riverMesh);
-    this.zip.file('model/river.stl', riverSTL);
-    this.setState(ModelGeneratorStates.ADD_ROADS);
-    this.polygonsToProcess = this.minorRoads.concat(this.majorRoads).concat(this.mainRoads);
+    const river = this.riversToProcess.pop();
+    if (!river) {
+      return false;
+    }
+
+    const riverMesh = this.polygonToMesh(river, 1);
+    if (!riverMesh) {
+      console.log('Warning: river mesh is null');
+      return true;
+    }
+    if (!this.groundMesh) {
+      throw new Error('this.groundMesh is null');
+    }
+
+    this.riversGeometry.merge(riverMesh.geometry as THREE.Geometry, this.groundMesh.matrix);
+    return true;
   }
 
   private addRoads(): boolean {
@@ -138,7 +181,7 @@ export class ModelGenerator {
     if (!road) {
       return false;
     }
-    const roadsMesh = this.polygonToMesh(road, 0);
+    const roadsMesh = this.polygonToMesh(road, 1);
     if (!roadsMesh) {
       console.log('Warning - roads mesh was null');
       return true;
@@ -166,7 +209,7 @@ export class ModelGenerator {
     if (!block) {
       return false;
     }
-    const blockMesh = this.polygonToMesh(block, 1);
+    const blockMesh = this.polygonToMesh(block, 2);
     if (!blockMesh) {
       console.log('Warning - block mesh was null');
       return true;
