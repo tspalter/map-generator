@@ -29,6 +29,7 @@ export default class WaterGenerator extends StreamlineGenerator {
   private _seaPolygons: Vector[][] = []; // Uses screen rectangle and simplified road
   private _riverPolygons: Vector[][] = []; // Simplified
   private _riverSecondaryRoad: Vector[] = [];
+  private _riverStreamlines: Vector[][] = [];
 
   constructor(
     integrator: FieldIntegrator,
@@ -121,7 +122,7 @@ export default class WaterGenerator extends StreamlineGenerator {
           console.log('vector is broken');
           throw new Error('Vector failed to be created');
         }
-        console.log("v: " + v.x + ", " + v.y);
+        // console.log("v: " + v.x + ", " + v.y);
         coastStreamline.push(v);
       }
     }
@@ -137,7 +138,7 @@ export default class WaterGenerator extends StreamlineGenerator {
           console.log('vector is broken');
           throw new Error('Vector failed to be created');
         }
-        console.log("v: " + v.x + ", " + v.y);
+        // console.log("v: " + v.x + ", " + v.y);
         coastStreamline.push(v);
       }
     }
@@ -275,58 +276,120 @@ export default class WaterGenerator extends StreamlineGenerator {
     this.tensorField.disableGlobalNoise();
 
     // Create river roads
-    const expandedNoisy = this.complexifyStreamline(
-      PolygonUtil.resizeGeometry(riverStreamline, this.params.riverSize, false),
-    );
-    this._riverPolygons.push(PolygonUtil.resizeGeometry(
+    this._riverStreamlines.push(riverStreamline);
+    // const expandedNoisy = this.complexifyStreamline(
+    //   PolygonUtil.resizeGeometry(riverStreamline, this.params.riverSize, false),
+    // );
+    let riverPoly = PolygonUtil.resizeGeometry(
       riverStreamline,
       this.params.riverSize - this.params.riverBankSize,
-      false,
-    ));
-    // Make sure riverPolygon[0] is off screen
-    const firstOffScreen = expandedNoisy.findIndex((v) => this.vectorOffScreen(v));
-    for (let i = 0; i < firstOffScreen; i++) {
-      const enShift = expandedNoisy.shift();
-      if (enShift) {
-        expandedNoisy.push(enShift);
+      false
+    );
+    this._riverPolygons.push(riverPoly);
+    // // Make sure riverPolygon[0] is off screen
+    // const firstOffScreen = expandedNoisy.findIndex((v) => this.vectorOffScreen(v));
+    // for (let i = 0; i < firstOffScreen; i++) {
+    //   const enShift = expandedNoisy.shift();
+    //   if (enShift) {
+    //     expandedNoisy.push(enShift);
+    //   }
+    // }
+
+    // // Create river roads
+    // const riverSplitPoly = this.getSeaPolygon(riverStreamline);
+    // const road1 = expandedNoisy.filter(
+    //   (v) =>
+    //     !PolygonUtil.insidePolygons(v, this._seaPolygons) && 
+    //     !this.vectorOffScreen(v) &&
+    //     PolygonUtil.insidePolygons(v, this._riverPolygons),
+    // );
+    // const road1Simple = this.simplifyStreamline(road1);
+    // const road2 = expandedNoisy.filter(
+    //   (v) =>
+    //     !PolygonUtil.insidePolygons(v, this._seaPolygons) &&
+    //     !this.vectorOffScreen(v) &&
+    //     !PolygonUtil.insidePolygons(v, this._riverPolygons),
+    // );
+    // const road2Simple = this.simplifyStreamline(road2);
+
+    // if (road1.length === 0 || road2.length === 0) return;
+
+    // if (road1[0].distanceToSquared(road2[0]) < road1[0].distanceToSquared(road2[road2.length - 1])) {
+    //   road2Simple.reverse();
+    // }
+
+    // this.tensorField.river = road1Simple.concat(road2Simple);
+
+    // // Road 1
+    // this.allStreamlinesSimple.push(road1Simple);
+    // this._riverSecondaryRoad = road2Simple;
+
+    // this.grid(!this.coastlineMajor).addPolyline(road1);
+    // this.grid(!this.coastlineMajor).addPolyline(road2);
+    // this.streamlines(!this.coastlineMajor).push(road1);
+    // this.streamlines(!this.coastlineMajor).push(road2);
+    // this.allStreamlines.push(road1);
+    // this.allStreamlines.push(road2);
+  }
+
+  public createRiverRoads(): void {
+    this.sortRiverElements();
+    let count = 0;
+    for (const riverStreamline of this._riverStreamlines) {
+      const expandedNoisy = this.complexifyStreamline(
+        PolygonUtil.resizeGeometry(riverStreamline, this.params.riverSize, false),
+      );
+      // Make sure riverPolygon[0] is off screen
+      const firstOffScreen = expandedNoisy.findIndex((v) => this.isRightmostVector(expandedNoisy, v));
+      for (let i = 0; i < firstOffScreen; i++) {
+        const enShift = expandedNoisy.shift();
+        if (enShift) {
+          expandedNoisy.push(enShift);
+        }
       }
+  
+      // Create river roads
+      const road1 = expandedNoisy.filter(
+        (v) =>
+          !PolygonUtil.insidePolygons(v, this._seaPolygons) && 
+          !this.vectorOffScreen(v) &&
+          !PolygonUtil.insidePolygons(v, this._riverPolygons)
+      );
+      const road1Simple = this.simplifyStreamline(road1);
+      const road2 = expandedNoisy.filter(
+        (v) =>
+          !PolygonUtil.insidePolygons(v, this._seaPolygons) &&
+          !this.vectorOffScreen(v) &&
+          !PolygonUtil.insidePolygons(v, this._riverPolygons)
+      );
+      const road2Simple = this.simplifyStreamline(road2);
+  
+      if (road1.length === 0 || road2.length === 0) return;
+  
+      if (road1[0].distanceToSquared(road2[0]) < road1[0].distanceToSquared(road2[road2.length - 1])) {
+        road2Simple.reverse();
+      }
+  
+      this.tensorField.river = this.tensorField.river.concat(road2Simple);
+      count++;
+  
+      // Road 1
+      this.allStreamlinesSimple.push(road1Simple);
+      this._riverSecondaryRoad = road2Simple;
+  
+      this.grid(!this.coastlineMajor).addPolyline(road1);
+      this.grid(!this.coastlineMajor).addPolyline(road2);
+      this.streamlines(!this.coastlineMajor).push(road1);
+      this.streamlines(!this.coastlineMajor).push(road2);
+      this.allStreamlines.push(road1);
+      this.allStreamlines.push(road2);
     }
+  }
 
-    // Create river roads
-    const riverSplitPoly = this.getSeaPolygon(riverStreamline);
-    const road1 = expandedNoisy.filter(
-      (v) =>
-        !PolygonUtil.insidePolygons(v, this._seaPolygons) &&
-        !this.vectorOffScreen(v) &&
-        PolygonUtil.insidePolygon(v, riverSplitPoly),
-    );
-    const road1Simple = this.simplifyStreamline(road1);
-    const road2 = expandedNoisy.filter(
-      (v) =>
-        !PolygonUtil.insidePolygons(v, this._seaPolygons) &&
-        !this.vectorOffScreen(v) &&
-        !PolygonUtil.insidePolygon(v, riverSplitPoly),
-    );
-    const road2Simple = this.simplifyStreamline(road2);
-
-    if (road1.length === 0 || road2.length === 0) return;
-
-    if (road1[0].distanceToSquared(road2[0]) < road1[0].distanceToSquared(road2[road2.length - 1])) {
-      road2Simple.reverse();
-    }
-
-    this.tensorField.river = road1Simple.concat(road2Simple);
-
-    // Road 1
-    this.allStreamlinesSimple.push(road1Simple);
-    this._riverSecondaryRoad = road2Simple;
-
-    this.grid(!this.coastlineMajor).addPolyline(road1);
-    this.grid(!this.coastlineMajor).addPolyline(road2);
-    this.streamlines(!this.coastlineMajor).push(road1);
-    this.streamlines(!this.coastlineMajor).push(road2);
-    this.allStreamlines.push(road1);
-    this.allStreamlines.push(road2);
+  public sortRiverElements(): void {
+    this._riverPolygons.sort((a, b) => this.rightmostVector(a).x - this.rightmostVector(b).x);
+    this._riverPolygons.forEach((a) => console.log(JSON.stringify(this.rightmostVector(a))));
+    this._riverStreamlines.sort((a, b) => this.rightmostVector(a).x - this.rightmostVector(b).x);
   }
 
   /**
@@ -462,5 +525,39 @@ export default class WaterGenerator extends StreamlineGenerator {
     return (
       toOrigin.x <= 0 || toOrigin.y <= 0 || toOrigin.x >= this.worldDimensions.x || toOrigin.y >= this.worldDimensions.y
     );
+  }
+
+  private rightmostVector(streamline: Vector[]): Vector {
+    let rightmost = new Vector(-Infinity, -Infinity);
+    for (const v of streamline) {
+      if (v.x > rightmost.x) {
+        rightmost = v;
+      }
+    }
+
+    return rightmost;
+  }
+
+  private isRightmostVector(streamline: Vector[], point: Vector): boolean {
+    if (point == this.rightmostVector(streamline)) {
+      return true;
+    }
+    return false;
+  }
+
+  private aboveStreamline(point: Vector, streamline: Vector[]): boolean {
+    let closest = new Vector(Infinity, Infinity);
+    for (const v of streamline) {
+      const diffX = Math.abs(point.x - v.x);
+      if (diffX < Math.abs(closest.x - point.x)) {
+        closest = v;
+      }
+    }
+
+    if (closest.y < point.y) {
+      return false;
+    }
+
+    return true;
   }
 }

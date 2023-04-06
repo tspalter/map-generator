@@ -57,19 +57,19 @@ export class WaterGUI extends RoadGUI {
         break;
       }
     }
-    
+    let riverIndex = 0;
     for (const feature of data.features) {
       if (feature.properties.natural == "water") {
         this.streamlines.createCoastFromData(feature, originPoint);
+        riverIndex++;
       }
     }
-    // this.streamlines.createCoast();
     for (const feature of data.features) {
       if (feature.properties.waterway != null) {
         this.streamlines.createRiverFromData(feature, originPoint);
       }
     }
-    // this.streamlines.createRiver();
+    this.streamlines.createRiverRoads();
 
     this.closeTensorFolder();
     this.redraw();

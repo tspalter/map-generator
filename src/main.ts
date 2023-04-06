@@ -10,7 +10,7 @@ import { saveAs } from 'file-saver';
 import { BasisField, Grid, Radial } from './ts/impl/basis-field';
 
 export class Main {
-  private readonly STARTING_WIDTH = 1440; // Initially zooms in if width > STARTING_WIDTH
+  private readonly STARTING_WIDTH = 3000; // Initially zooms in if width > STARTING_WIDTH
 
   // UI
   private domainController = DomainController.getInstance();

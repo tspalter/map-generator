@@ -304,6 +304,14 @@ export class StreamlineGenerator {
     this.grid(major).addPolyline(streamline);
     this.streamlines(major).push(streamline);
     this.allStreamlines.push(streamline);
+
+    this.allStreamlinesSimple.push(this.simplifyStreamline(streamline));
+
+      // Add candidate seeds
+      if (!streamline[0].equals(streamline[streamline.length - 1])) {
+        this.candidateSeeds(!major).push(streamline[0]);
+        this.candidateSeeds(!major).push(streamline[streamline.length - 1]);
+      }
   }
 
   protected validStreamline(s: Vector[]): boolean {

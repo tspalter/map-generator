@@ -11,7 +11,7 @@ export class DomainController {
   private readonly SCROLL_DELAY = 100;
 
   // Location of screen origin in world space
-  private _origin: Vector = Vector.zeroVector();
+  private _origin: Vector = new Vector(1500, -3900);
 
   // Screen-space width and height
   private _screenDimensions = Vector.zeroVector();
@@ -43,8 +43,8 @@ export class DomainController {
 
   private setScreenDimensions(): void {
     this.moved = true;
-    this._screenDimensions.setX(1536);
-    this._screenDimensions.setY(746);
+    this._screenDimensions.setX(3400);
+    this._screenDimensions.setY(3750);
   }
 
   public static getInstance(): DomainController {
