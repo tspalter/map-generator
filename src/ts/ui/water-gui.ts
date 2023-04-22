@@ -12,12 +12,15 @@ import { readFileSync } from 'fs';
 export class WaterGUI extends RoadGUI {
   protected streamlines: WaterGenerator;
 
+  private locationFilename = '';
+
   constructor(
     private tensorField: TensorField,
     protected params: WaterParams,
     integrator: FieldIntegrator,
     closeTensorFolder: () => void,
     folderName: string,
+    locationFilename: string,
     redraw: () => void,
   ) {
     super(params, integrator, closeTensorFolder, folderName, redraw);
@@ -28,6 +31,8 @@ export class WaterGUI extends RoadGUI {
       Object.assign({}, this.params),
       this.tensorField,
     );
+
+    this.locationFilename = locationFilename;
   }
 
   initFolder(): WaterGUI {
@@ -47,7 +52,7 @@ export class WaterGUI extends RoadGUI {
     );
     this.domainController.zoom = this.domainController.zoom * Util.DRAW_INFLATE_AMOUNT;
 
-    const fileContent = readFileSync('C:/Users/tcs11/Documents/map-generator/OSM-locations/Washington/seattle.geojson', 'utf8');
+    const fileContent = readFileSync('C:/Users/tcs11/Documents/map-generator/OSM-locations/' + this.locationFilename, 'utf8');
     const data = JSON.parse(fileContent);
     let originPoint = Vector.zeroVector();
     for (const feature of data.features) {

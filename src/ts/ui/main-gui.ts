@@ -51,6 +51,8 @@ export class MainGUI {
 
   private redraw = true;
 
+  private locationFilename = '';
+
   constructor(private tensorField: TensorField, 
     minordsep: number,
     minordtest: number,
@@ -104,6 +106,8 @@ export class MainGUI {
     buildingminArea: number,
     buildingshrinkSpacing: number,
     buildingchanceNoDivide: number,
+    locationFilename: string,
+    riversize: number,
     private closeTensorFolder: () => void) {
       this.numBigParks = numBigParks;
       this.numSmallParks = numSmallParks;
@@ -132,7 +136,7 @@ export class MainGUI {
           noiseAngle: rivernoiseAngle,
         },
         riverBankSize: 10,
-        riverSize: 30,
+        riverSize: riversize,
       },
       this.minorParams,
     );
@@ -174,12 +178,15 @@ export class MainGUI {
     const integrator = new RK4Integrator(tensorField, this.minorParams);
     const redraw = () => (this.redraw = true);
 
+    this.locationFilename = locationFilename;
+
     this.coastline = new WaterGUI(
       tensorField,
       this.coastlineParams,
       integrator,
       closeTensorFolder,
       'Water',
+      this.locationFilename,
       redraw,
     ).initFolder();
     this.mainRoads = new RoadGUI(this.mainParams, integrator, closeTensorFolder, 'Main', redraw).initFolder();

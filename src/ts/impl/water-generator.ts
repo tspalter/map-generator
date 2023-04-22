@@ -114,15 +114,13 @@ export default class WaterGenerator extends StreamlineGenerator {
       for (let i = 0; i < coords.length; i++) {
         const lat = coords[i][1];
         const long = coords[i][0];
-        let v = this.latlongToUTM(lat, long);
-        v = this.latlongToMercator(lat, long);
+        let v = this.latlongToMercator(lat, long);
         v.x -= originPoint.x;
         v.y -= originPoint.y;
         if (!v) {
           console.log('vector is broken');
           throw new Error('Vector failed to be created');
         }
-        // console.log("v: " + v.x + ", " + v.y);
         coastStreamline.push(v);
       }
     }
@@ -130,15 +128,13 @@ export default class WaterGenerator extends StreamlineGenerator {
       for (let i = 0; i < coords[0].length; i++) {
         const lat = coords[0][i][1];
         const long = coords[0][i][0];
-        let v = this.latlongToUTM(lat, long);
-        v = this.latlongToMercator(lat, long);
+        let v = this.latlongToMercator(lat, long);
         v.x -= originPoint.x;
         v.y -= originPoint.y;
         if (!v) {
           console.log('vector is broken');
           throw new Error('Vector failed to be created');
         }
-        // console.log("v: " + v.x + ", " + v.y);
         coastStreamline.push(v);
       }
     }
@@ -277,64 +273,17 @@ export default class WaterGenerator extends StreamlineGenerator {
 
     // Create river roads
     this._riverStreamlines.push(riverStreamline);
-    // const expandedNoisy = this.complexifyStreamline(
-    //   PolygonUtil.resizeGeometry(riverStreamline, this.params.riverSize, false),
-    // );
+
     let riverPoly = PolygonUtil.resizeGeometry(
       riverStreamline,
       this.params.riverSize - this.params.riverBankSize,
       false
     );
     this._riverPolygons.push(riverPoly);
-    // // Make sure riverPolygon[0] is off screen
-    // const firstOffScreen = expandedNoisy.findIndex((v) => this.vectorOffScreen(v));
-    // for (let i = 0; i < firstOffScreen; i++) {
-    //   const enShift = expandedNoisy.shift();
-    //   if (enShift) {
-    //     expandedNoisy.push(enShift);
-    //   }
-    // }
-
-    // // Create river roads
-    // const riverSplitPoly = this.getSeaPolygon(riverStreamline);
-    // const road1 = expandedNoisy.filter(
-    //   (v) =>
-    //     !PolygonUtil.insidePolygons(v, this._seaPolygons) && 
-    //     !this.vectorOffScreen(v) &&
-    //     PolygonUtil.insidePolygons(v, this._riverPolygons),
-    // );
-    // const road1Simple = this.simplifyStreamline(road1);
-    // const road2 = expandedNoisy.filter(
-    //   (v) =>
-    //     !PolygonUtil.insidePolygons(v, this._seaPolygons) &&
-    //     !this.vectorOffScreen(v) &&
-    //     !PolygonUtil.insidePolygons(v, this._riverPolygons),
-    // );
-    // const road2Simple = this.simplifyStreamline(road2);
-
-    // if (road1.length === 0 || road2.length === 0) return;
-
-    // if (road1[0].distanceToSquared(road2[0]) < road1[0].distanceToSquared(road2[road2.length - 1])) {
-    //   road2Simple.reverse();
-    // }
-
-    // this.tensorField.river = road1Simple.concat(road2Simple);
-
-    // // Road 1
-    // this.allStreamlinesSimple.push(road1Simple);
-    // this._riverSecondaryRoad = road2Simple;
-
-    // this.grid(!this.coastlineMajor).addPolyline(road1);
-    // this.grid(!this.coastlineMajor).addPolyline(road2);
-    // this.streamlines(!this.coastlineMajor).push(road1);
-    // this.streamlines(!this.coastlineMajor).push(road2);
-    // this.allStreamlines.push(road1);
-    // this.allStreamlines.push(road2);
   }
 
   public createRiverRoads(): void {
     this.sortRiverElements();
-    let count = 0;
     for (const riverStreamline of this._riverStreamlines) {
       const expandedNoisy = this.complexifyStreamline(
         PolygonUtil.resizeGeometry(riverStreamline, this.params.riverSize, false),
@@ -370,19 +319,18 @@ export default class WaterGenerator extends StreamlineGenerator {
         road2Simple.reverse();
       }
   
-      this.tensorField.river = this.tensorField.river.concat(road2Simple);
-      count++;
+      this.tensorField.river = this.tensorField.river.concat(road1Simple);
   
       // Road 1
       this.allStreamlinesSimple.push(road1Simple);
-      this._riverSecondaryRoad = road2Simple;
+      this._riverSecondaryRoad = road1Simple;
   
       this.grid(!this.coastlineMajor).addPolyline(road1);
-      this.grid(!this.coastlineMajor).addPolyline(road2);
+      // this.grid(!this.coastlineMajor).addPolyline(road2);
       this.streamlines(!this.coastlineMajor).push(road1);
-      this.streamlines(!this.coastlineMajor).push(road2);
+      // this.streamlines(!this.coastlineMajor).push(road2);
       this.allStreamlines.push(road1);
-      this.allStreamlines.push(road2);
+      // this.allStreamlines.push(road2);
     }
   }
 

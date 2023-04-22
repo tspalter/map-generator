@@ -83,12 +83,18 @@ interface Arguments {
   radialY: number;
   radialsize: number;
   radialdecay: number;
+  locationFilename: string;
+  riverSize: number;
+  originX: number;
+  originY: number;
+  screenDimsX: number;
+  screenDimsY: number;
 }
 
 const argv: Arguments = yargs(process.argv.slice(2))
   .options({
     outfile: { type: 'string', default: 'model.zip' },
-    minordsep: { type: 'number', default: 60 },
+    minordsep: { type: 'number', default: 80 },
     minordtest: { type: 'number', default: 45},
     minordstep: { type: 'number', default: 1},
     minordlookahead: { type: 'number', default: 40},
@@ -98,7 +104,7 @@ const argv: Arguments = yargs(process.argv.slice(2))
     minorseedTries: { type: 'number', default: 300},
     minorsimplifyTolerance: { type: 'number', default: 0.5},
     minorcollideEarly: { type: 'number', default: 0},
-    majordsep: { type: 'number', default: 300 },
+    majordsep: { type: 'number', default: 400 },
     majordtest: { type: 'number', default: 90},
     majordstep: { type: 'number', default: 1},
     majordlookahead: { type: 'number', default: 200},
@@ -108,7 +114,7 @@ const argv: Arguments = yargs(process.argv.slice(2))
     majorseedTries: { type: 'number', default: 300},
     majorsimplifyTolerance: { type: 'number', default: 0.5},
     majorcollideEarly: { type: 'number', default: 0},
-    maindsep: { type: 'number', default: 1200 },
+    maindsep: { type: 'number', default: 1600 },
     maindtest: { type: 'number', default: 600},
     maindstep: { type: 'number', default: 1},
     maindlookahead: { type: 'number', default: 500},
@@ -138,32 +144,38 @@ const argv: Arguments = yargs(process.argv.slice(2))
     numBigParks: { type: 'number', default: 2},
     numSmallParks: { type: 'number', default: 0},
     buildingminArea: { type: 'number', default: 800},
-    buildingshrinkSpacing: { type: 'number', default: 4},
+    buildingshrinkSpacing: { type: 'number', default: 8},
     buildingchanceNoDivide: { type: 'number', default: 0.05},
-    grid0X: { type: 'number', default: 264},
-    grid0Y: { type: 'number', default: 128},
+    grid0X: { type: 'number', default: 1600},
+    grid0Y: { type: 'number', default: -3600},
     grid0size: { type: 'number', default: 1424},
     grid0decay: { type: 'number', default: 32},
-    grid0theta: { type: 'number', default: 56},
-    grid1X: { type: 'number', default: 1272},
-    grid1Y: { type: 'number', default: 618},
-    grid1size: { type: 'number', default: 1264},
+    grid0theta: { type: 'number', default: -42},
+    grid1X: { type: 'number', default: 1700},
+    grid1Y: { type: 'number', default: -1600},
+    grid1size: { type: 'number', default: 1764},
     grid1decay: { type: 'number', default: 42},
-    grid1theta: { type: 'number', default: 88},
-    grid2X: { type: 'number', default: 1272},
-    grid2Y: { type: 'number', default: 128},
-    grid2size: { type: 'number', default: 406},
-    grid2decay: { type: 'number', default: 9.8},
-    grid2theta: { type: 'number', default: 76},
-    grid3X: { type: 'number', default: 264},
-    grid3Y: { type: 'number', default: 618},
-    grid3size: { type: 'number', default: 364},
-    grid3decay: { type: 'number', default: 34},
-    grid3theta: { type: 'number', default: 30},
-    radialX: { type: 'number', default: 989},
-    radialY: { type: 'number', default: 304},
-    radialsize: { type: 'number', default: 267},
+    grid1theta: { type: 'number', default: 72},
+    grid2X: { type: 'number', default: 3900},
+    grid2Y: { type: 'number', default: -3500},
+    grid2size: { type: 'number', default: 906},
+    grid2decay: { type: 'number', default: 86},
+    grid2theta: { type: 'number', default: 7},
+    grid3X: { type: 'number', default: 3900},
+    grid3Y: { type: 'number', default: -1800},
+    grid3size: { type: 'number', default: 1064},
+    grid3decay: { type: 'number', default: 108},
+    grid3theta: { type: 'number', default: -9},
+    radialX: { type: 'number', default: 3200},
+    radialY: { type: 'number', default: -2000},
+    radialsize: { type: 'number', default: 300},
     radialdecay: { type: 'number', default: 46},
+    locationFilename: { type: 'string', default: 'Washington/seattle.geojson'},
+    riverSize: { type: 'number', default: 30},
+    originX: { type: 'number', default: 1500},
+    originY: { type: 'number', default: -3900},
+    screenDimsX: { type: 'number', default: 3400},
+    screenDimsY: { type: 'number', default: 3900},
   })
   .parseSync();
 
@@ -242,9 +254,15 @@ const main = new Main(argv.minordsep,
   argv.radialX,
   argv.radialY,
   argv.radialsize,
-  argv.radialdecay
+  argv.radialdecay,
+  argv.locationFilename,
+  argv.riverSize,
+  argv.originX,
+  argv.originY,
+  argv.screenDimsX,
+  argv.screenDimsY
   );
-  const fileContent = readFileSync('C:/Users/tcs11/Documents/map-generator/OSM-locations/Washington/seattle.geojson', 'utf8');
+  const fileContent = readFileSync('C:/Users/tcs11/Documents/map-generator/OSM-locations/' + argv.locationFilename, 'utf8');
   const data = JSON.parse(fileContent);
   // console.log(data.type);
   // for(const feature of data.features) {

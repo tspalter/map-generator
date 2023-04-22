@@ -165,7 +165,11 @@ export class StreamlineGenerator {
    */
   getBestNextPoint(point: Vector, previousPoint: Vector): Vector | null {
     const nearbyPoints = this.majorGrid.getNearbyPoints(point, this.params.dlookahead);
-    nearbyPoints.push(...this.minorGrid.getNearbyPoints(point, this.params.dlookahead));
+    const minorNearbyPoints = this.minorGrid.getNearbyPoints(point, this.params.dlookahead);
+    for (const point of minorNearbyPoints) {
+      nearbyPoints.push(point);
+    }
+    // nearbyPoints.push(...this.minorGrid.getNearbyPoints(point, this.params.dlookahead));
     const direction = point.clone().sub(previousPoint);
 
     let closestSample = null;

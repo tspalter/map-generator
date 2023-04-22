@@ -119,8 +119,17 @@ export class Main {
     radialX: number,
     radialY: number,
     radialsize: number,
-    radialdecay: number) {
+    radialdecay: number,
+    locationFilename: string,
+    riverSize: number,
+    originX: number,
+    originY: number,
+    screenDimsX: number,
+    screenDimsY: number) {
     // Make sure we're not too zoomed out for large resolutions
+    this.domainController.setOrigin(originX, originY);
+    this.domainController.setScreenDims(screenDimsX, screenDimsY);
+
     const screenWidth = this.domainController.screenDimensions.x;
     if (screenWidth > this.STARTING_WIDTH) {
       this.domainController.zoom = screenWidth / this.STARTING_WIDTH;
@@ -190,6 +199,8 @@ export class Main {
       buildingminArea,
       buildingshrinkSpacing,
       buildingchanceNoDivide,
+      locationFilename,
+      riverSize,
       () => {});
 
     this.tensorField.setRecommended();
